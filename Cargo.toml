@@ -1,0 +1,58 @@
+[package]
+name = "Nebula"
+version = "0.1.0"
+edition = "2021"
+[badges]
+maintenance = { status = "InTheOptimization" }
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+[build-dependencies]#:[构建包]
+[lib]#[高可用库]
+path = "./src/main.rs"
+[profile.dev]#[Debug]
+codegen-units = 64
+[profile.release]#[Release]
+opt-level = 3
+codegen-units = 1
+strip = true
+lto = true
+[profile.release.build-override]
+opt-level = 3
+codegen-units = 1
+strip = true
+#[source.ustc]
+#registry = "git://mirrors.ustc.edu.cn/crates.io-index"
+#源配置
+#演示
+#[[example]]
+#name = "Nebula"
+#path = "src/main.rs"
+#++++++++++++++++++|++++++++++++|
+#cargo new {%HOME%}|创建项目[bin]
+#++++++++++++++++++|+++++|+++++++++++|
+#cargo new --lib {%HOME%}|创建项目[lib]
+#++++++++++++++++|+++++++|+++++++++++|
+#cargo doc --open|文档生成
+#+++++++++++|++++|+++++++|++++++++++++++++++|+++++++++++++++++++++++++|
+#cargo test & cargo test -- --test-threads=1|测试 [test]测试,[ignore]忽略
+#++++++++++++++++++++++++++++++++++++|++++++|++++|++++++++++++++++++++|
+#cargo build & cargo build --release |构建
+#+++++++++++++++++++++|++++++++++++++|++++++|
+#cargo install --path |下载
+#++++++++++++|++++++++|+++|
+#cargo check |检查
+#++++++++++++|+|+++|
+#rustup update |更新
+#++++++++++++++|+++++++++++++++++++|+++++++++|
+#rustup default stable/nightly/beta|默认版本切换
+#++++++++++++++++++++++|+++++++++++|
+#rustup toolchain list |模式查看
+#+++++++++++++++|++++++|
+#rustc --version|查看版本
+#+++++++++++++++|++|++++++++++++++++++++++++++++++++++++++++++++++++++++++|
+#cargo install crm |源更换 crm best[自动更换],crm publish官方源执行cargo publish
+#+++++++++++++++|++|+++++++|++++++++++++++++++++++++++++++++++++++++++++++|
+#rustup component add miri |测试代码 cargo miri[使用],cargo miri test[测试]
+#++++++++++++++++++++++++++|+++++++++++++++++++++++++++++++++++++++++++|
+#++++++++++++++++++++++++++|++++++++++++++++++++++++--doc
