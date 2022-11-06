@@ -15,8 +15,9 @@ where
 {
     ///#返回设置
     ///#fn setting(e: &str, f: &mut String) -> Result<G>
-    fn setting_xml(e: &str, f: &mut String) -> Result<G> {
-        BufReader::new(File::open(e)?).read_to_string(f)?;
+    fn setting_xml(e: &str) -> Result<G> {
+        let mut f = String::new();
+        BufReader::new(File::open(e)?).read_to_string(&mut f)?;
         return Ok(from_str_serializer(&f)?);
     }
     //#环境变量读取 fn local_var(e: &str) -> Result<String>

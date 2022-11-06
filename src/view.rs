@@ -14,8 +14,12 @@ pub struct Grade<Rx: ToString> {
 }
 ///#风格
 pub enum Colour {
-    ///#[Frames::]
+    ///错误
     Error,
+    ///输出
+    Output,
+    ///命令
+    Order,
 }
 ///#画面数据
 pub struct Frames {
@@ -36,7 +40,55 @@ impl Colour {
                 frames: Color::DarkRed,
                 background: Color::Black,
             },
+            Colour::Output => Frames {
+                text: Attribute::Italic,
+                frames: Color::DarkGreen,
+                background: Color::Black,
+            },
+            Colour::Order => Frames {
+                text: Attribute::DoubleUnderlined,
+                frames: Color::DarkCyan,
+                background: Color::Black,
+            },
         };
+    }
+}
+
+impl GUI {
+    ///#pub fn dispose(e: anyhow::Result<(), anyhow::Error>, pic: bool)环节使用
+    pub fn dispose(f: &str, e: anyhow::Result<(), anyhow::Error>, pic: bool) {
+        e.unwrap_or_else(|x| {
+            if pic {
+                panic!("{x}");
+            }
+            eprintln!(
+                "{}",
+                *GUI::from((
+                    Colour::Error,
+                    Grade {
+                        explain: vec![f],
+                        output: vec![vec![format!("{:?}", x).as_str()]],
+                    },
+                ))
+            );
+        });
+    }
+    ///#必须panic[unwrap]使用
+    pub fn numerical_treatment<GX: Sized>(f: &str, e: anyhow::Result<GX, anyhow::Error>) -> GX {
+        return e.unwrap_or_else(|x| {
+            eprintln!(
+                "{}",
+                GUI::from((
+                    Colour::Error,
+                    Grade {
+                        explain: vec![f],
+                        output: vec![vec![format!("{:?}", x).as_str()]],
+                    },
+                ))
+                .0
+            );
+            panic!("{x}");
+        });
     }
 }
 impl From<(Colour, Grade<&str>)> for GUI {

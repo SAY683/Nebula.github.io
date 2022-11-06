@@ -1,6 +1,6 @@
 use crate::file::{
-    file_async::{FileAsynchronousOperation, FileAsynchronously},
-    FileOperation, FileOperations, LocalFileOperations,
+	file_async::{FileAsynchronousOperation, FileAsynchronously},
+	FileOperation, FileOperations, LocalFileOperations,
 };
 use anyhow::Result;
 use async_trait::async_trait;
@@ -12,126 +12,162 @@ use std::path::PathBuf;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Master {
-    pub local: SocketAddr,
-    pub hdfs: PathBuf,
-    pub logs: PathBuf,
+	pub local: SocketAddr,
+	pub hdfs: PathBuf,
+	pub logs: PathBuf,
 }
 
 ///#节点数据
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Slave {
-    //节点
-    pub slave: Vec<Node>,
-    //slave_hdfs统一配置
-    pub hdfs: PathBuf,
-    //slave守护节点
-    pub guard: Node,
+	//节点
+	pub slave: Vec<Node>,
+	//slave_hdfs统一配置
+	pub hdfs: PathBuf,
+	//slave守护节点
+	pub guard: Node,
 }
+
 ///#节点
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Node {
-    //名称
-    pub name: String,
-    //host
-    pub host: String,
+	//名称
+	pub name: String,
+	//host
+	pub host: String,
 }
+
 #[async_trait]
 pub trait SlimeNode: Sized {
-    fn new() -> Result<Self>;
-    //#读取产生
-    fn target(dir: &str, file: &str) -> Result<Vec<(PathBuf, RwLock<CompactString>)>> {
-        return Ok(LocalFileOperations([FileOperations::Read([(
-            CompactString::new(dir),
-            vec![CompactString::new(file)],
-        )])])
-        .run()?);
-    }
-    //#读取产生
-    async fn async_target(
-        dir: &str,
-    ) -> Result<<FileAsynchronousOperation<0> as FileAsynchronously>::Data> {
-        return Ok(
-            FileAsynchronousOperation::Read([(PathBuf::from(dir), vec![])])
-                .file_async()
-                .await?,
-        );
-    }
-    type Data;
-    //处理
-    fn handle(&self) -> Result<Self::Data>;
+	fn new() -> Result<Self>;
+	//#读取产生
+	fn target(dir: &str, file: &str) -> Result<Vec<(PathBuf, RwLock<CompactString>)>> {
+		return Ok(LocalFileOperations([FileOperations::Read([(
+			CompactString::new(dir),
+			vec![CompactString::new(file)],
+		)])])
+			.run()?);
+	}
+	//#读取产生
+	async fn async_target(
+		dir: &str,
+	) -> Result<<FileAsynchronousOperation<0> as FileAsynchronously>::Data> {
+		return Ok(
+			FileAsynchronousOperation::Read([(PathBuf::from(dir), vec![])])
+				.file_async()
+				.await?,
+		);
+	}
+	type Data;
+	//处理
+	fn handle(&self) -> Result<Self::Data>;
 }
+
 pub mod master_node {
-    use super::*;
-    use crate::env::Environment;
-    use crate::node::Master;
-    use std::ops::{Deref, DerefMut};
-    impl Environment for Master {}
-    impl SlimeNode for Master {
-        fn new() -> Result<Self> {
-            return Ok(Master {
-                local: format!(
-                    "{}:{}",
-                    Master::local_var("IP")?,
-                    Master::local_var("PORT")?
-                )
-                .parse()?,
-                hdfs: PathBuf::from(Master::local_var("HDFS")?),
-                logs: PathBuf::from(Master::local_var("LOGS")?),
-            });
-        }
+	use super::*;
+	use crate::env::Environment;
+	use crate::node::Master;
+	use crate::view::GUI;
+	use std::ops::{Deref, DerefMut};
+	use crate::{HDFS, IP, LOGS, PORT};
+	
+	impl Environment for Master {}
+	
+	impl SlimeNode for Master {
+		fn new() -> Result<Self> {
+			return Ok(Master {
+				local: format!(
+					"{}:{}",
+					IP.as_ref().unwrap(),
+					PORT.as_ref().unwrap()
+				)
+					.parse()?,
+				hdfs: PathBuf::from(HDFS.as_ref().unwrap()),
+				logs: PathBuf::from(LOGS.as_ref().unwrap()),
+			});
+		}
+		
+		type Data = <Master as Deref>::Target;
+		///#type Data = Lazy<fn()-><Master as Deref>::Target>;
+		fn handle(&self) -> Result<Self::Data> {
+			return Ok(self.local.to_string().parse::<SocketAddr>()?);
+		}
+	}
+	
+	impl Into<String> for Master {
+		fn into(self) -> String {
+			return self.local.to_string();
+		}
+	}
+	
+	impl Deref for Master {
+		type Target = SocketAddr;
+		fn deref(&self) -> &Self::Target {
+			return &self.local;
+		}
+	}
+	
+	impl DerefMut for Master {
+		fn deref_mut(&mut self) -> &mut Self::Target {
+			return &mut self.local;
+		}
+	}
+	
+	impl<Rx: Sized> AsRef<Rx> for Master
+		where
+			<Master as Deref>::Target: AsRef<Rx>,
+	{
+		fn as_ref(&self) -> &Rx {
+			return self.deref().as_ref();
+		}
+	}
+	
+	impl<Rx: Sized> AsMut<Rx> for Master
+		where
+			<Master as Deref>::Target: AsMut<Rx>,
+	{
+		fn as_mut(&mut self) -> &mut Rx {
+			return self.deref_mut().as_mut();
+		}
+	}
+	
+	impl From<SocketAddr> for Master {
+		///#首先文件否则默认
+		fn from(value: SocketAddr) -> Self {
+			let x = GUI::numerical_treatment("Master\r\nfrom", Master::new());
+			return Master {
+				local: value,
+				hdfs: x.hdfs,
+				logs: x.logs,
+			};
+		}
+	}
+}
 
-        type Data = <Master as Deref>::Target;
-        ///#type Data = Lazy<fn()-><Master as Deref>::Target>;
-        fn handle(&self) -> Result<Self::Data> {
-            return Ok(self.local.to_string().parse::<SocketAddr>()?);
-        }
-    }
-    impl Into<String> for Master {
-        fn into(self) -> String {
-            return self.local.to_string();
-        }
-    }
-
-    impl Deref for Master {
-        type Target = SocketAddr;
-        fn deref(&self) -> &Self::Target {
-            return &self.local;
-        }
-    }
-
-    impl DerefMut for Master {
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            return &mut self.local;
-        }
-    }
-
-    impl<Rx: Sized> AsRef<Rx> for Master
-    where
-        <Master as Deref>::Target: AsRef<Rx>,
-    {
-        fn as_ref(&self) -> &Rx {
-            return self.deref().as_ref();
-        }
-    }
-
-    impl<Rx: Sized> AsMut<Rx> for Master
-    where
-        <Master as Deref>::Target: AsMut<Rx>,
-    {
-        fn as_mut(&mut self) -> &mut Rx {
-            return self.deref_mut().as_mut();
-        }
-    }
-
-    impl From<SocketAddr> for Master {
-        ///#首先文件否则默认
-        fn from(value: SocketAddr) -> Self {
-            let x = Master::new().unwrap();
-            return Master {
-                local: value,
-                hdfs: x.hdfs,
-                logs: x.logs,
-            };
-        }
-    }
+pub mod node_manager {
+	use anyhow::Result;
+	use futures::executor::block_on;
+	use crate::{Environment, NODE};
+	use hashbrown::HashMap;
+	use super::*;
+	
+	impl Environment for Slave {}
+	
+	impl SlimeNode for Slave {
+		fn new() -> Result<Self> {
+			let x = block_on(FileAsynchronousOperation::Read([(PathBuf::from(NODE.as_ref().unwrap()), vec![])]).file_async())?;
+			let (_, y) = x.get(0).unwrap();
+			return Ok(serde_json::from_str(&*y.load().as_str())?);
+		}
+		type Data = HashMap<CompactString, CompactString>;
+		///#type Data = HashMap::<CompactString,CompactString>;(name,host)
+		///#fn handle(&self) -> Result<Self::Data>
+		fn handle(&self) -> Result<Self::Data> {
+			let mut r = hashbrown::HashMap::<CompactString, CompactString>::new();
+			self.slave.iter().for_each(|x| {
+				r.insert(CompactString::new(x.name.as_str()), CompactString::new(x.host.as_str()));
+			});
+			return Ok(r);
+		}
+	}
 }
