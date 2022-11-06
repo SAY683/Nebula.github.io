@@ -13,22 +13,42 @@
     never_type
 )]
 
+mod beginning;
 pub mod env;
 pub mod file;
 pub mod node;
+pub mod view;
 
+use crate::env::Setting;
+use crate::view::{Colour, Grade, GUI};
 use lazy_static::lazy_static;
+use once_cell::sync::OnceCell;
 use tokio::main;
 
 #[main]
 pub async fn main() -> anyhow::Result<()> {
+    //初始化
+    beginning::init().await.unwrap_or_else(|x| {
+        eprintln!(
+            "{}",
+            *GUI::from((
+                Colour::Error,
+                Grade {
+                    explain: vec!["beginning::init().await"],
+                    output: vec![vec![format!("{:?}", x).as_str()]],
+                },
+            ))
+        );
+        panic!("{}", x)
+    });
     return Ok(());
 }
 /*
 运行时调用
  */
 lazy_static! {}
-
+//#设置
+pub static SETTING: OnceCell<Setting> = OnceCell::new();
 ///#特殊类型
 pub mod special_type {
     use deluge::Iter;
