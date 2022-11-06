@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <NEBULA>
-    <setting>
-        <!--是否默认模式-->
-        <default>true</default>
-        <!--是否开启logs-->
-        <logs>false</logs>
-    </setting>
+    <!--是否开启日志-->
+    <logs>false</logs>
+    <!--是否开启集群-->
+    <colony>false</colony>
+    <!--备份-->
+    <backups>1</backups>
+    <!--热启用-->
+    <heat_enabled>true</heat_enabled>
 </NEBULA>

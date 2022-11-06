@@ -1,0 +1,17 @@
+{
+  "slave": [
+    {
+      "name": "slave1",
+      "host": "127.0.0.1:8956"
+    },
+    {
+      "name": "slave2",
+      "host": "127.0.0.1:8946"
+    }
+  ],
+  "hdfs": "./tmp/hdfs",
+  "guard": {
+    "name": "slave1",
+    "host": "127.0.0.1:8956"
+  }
+}
