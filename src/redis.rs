@@ -51,8 +51,9 @@ pub trait RedisServer<Gx = String> {
 		return Ok(Client::open(e)?);
 	}
 	///#fn ping_lot(e: &Client) -> Result<bool>
-	fn ping_lot(e: &Client) -> Result<bool> {
-		return Ok(e.get_connection()?.is_open());
+	fn ping_lot(e: &Client) -> Result<i64> {
+		e.get_connection()?.is_open();
+		return Ok(e.get_db());
 	}
 	///#async fn redis_connection_async(e: Pool) -> Result<Connection>
 	async fn redis_connection_async(e: Pool) -> Result<Connection> {

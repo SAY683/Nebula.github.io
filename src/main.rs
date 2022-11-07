@@ -43,7 +43,6 @@ pub async fn main() -> anyhow::Result<()> {
 	GUI::dispose("beginning::init()", beginning::init().await, true);
 	GUI::dispose("run::start()", run::start().await, true);
 	GUI::dispose("end::over()", end::over().await, true);
-	println!("{}", *GUI::from((Colour::Output, Grade { explain: vec!["生命"], output: vec![vec!["是水"]] })));
 	return Ok(());
 }
 /*

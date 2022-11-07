@@ -1,9 +1,10 @@
 use crate::env::Environment;
 use crate::node::{Master, NodeService, Slave};
-use crate::{CERT, HDFS, HTTP_HOME, IP, KEY, LOGS, MASTER, MYSQL, MYSQL_ULR, NODE, PORT, REDIS, REDIS_DRIVE, REDIS_ULR, RedisServer, RedisUlr, SETTING, SETTING_UP, SLAVE, TRANSCRIPT};
+use crate::{CERT, Colour, Grade, HDFS, HTTP_HOME, IP, KEY, LOGS, MASTER, MYSQL, MYSQL_ULR, MysqlServer, NODE, PORT, REDIS, REDIS_DRIVE, REDIS_ULR, RedisServer, RedisUlr, SETTING, SETTING_UP, SLAVE, TRANSCRIPT};
 use anyhow::Result;
 use crate::mysql::MysqlUlr;
 use async_backtrace::framed;
+use crate::view::GUI;
 
 ///#初始化
 #[framed]
@@ -17,7 +18,16 @@ pub async fn init() -> Result<()> {
 
 ///#全面检查
 pub async fn check() -> Result<()> {
-	if Master::ping_lot(REDIS_DRIVE.as_ref().unwrap())? {}
+	let mut x = Master::conn(&Master::get_pool(MYSQL_ULR.get().unwrap())).await?;
+	let r = Master::ping(&mut x).await?;
+	x.disconnect().await?;
+	println!("{}", *GUI::from((Colour::Output, Grade {
+		explain: vec!["REDIS", "MYSQL"],
+		output: vec![
+			vec![format!("REDIS VERSION[{}]", Master::ping_lot(REDIS_DRIVE.as_ref().unwrap())?).as_str(),
+			     format!("MYSQL VERSION[{}.{}{}]", r.0, r.1, r.2).as_str()]
+		],
+	})));
 	return Ok(());
 }
 
