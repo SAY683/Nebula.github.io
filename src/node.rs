@@ -9,6 +9,9 @@ use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use tokio::net::UdpSocket;
+use uuid::fmt::Urn;
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Master {
@@ -38,7 +41,15 @@ pub struct Node {
 }
 
 #[async_trait]
-pub trait SlimeNode: Sized {
+pub trait NodeService: Sized {
+	async fn local_node()->Result<String>{
+		let x = UdpSocket::bind("0.0.0.0:0").await?;
+		x.connect("8.8.8.8:80").await?;
+		return Ok(x.local_addr()?.ip().to_string());
+	}
+	fn uid() -> String {
+		return Urn::from_uuid(Uuid::new_v4()).to_string();
+	}
 	fn new() -> Result<Self>;
 	//#读取产生
 	fn target(dir: &str, file: &str) -> Result<Vec<(PathBuf, RwLock<CompactString>)>> {
@@ -69,21 +80,25 @@ pub mod master_node {
 	use crate::node::Master;
 	use crate::view::GUI;
 	use std::ops::{Deref, DerefMut};
+	use hashbrown::{HashMap, HashSet};
+	use crate::data_table::AeExam;
 	use crate::{HDFS, IP, LOGS, PORT};
+	use crate::mysql::MysqlServer;
+	use crate::redis::RedisServer;
 	
 	impl Environment for Master {}
 	
-	impl SlimeNode for Master {
+	impl NodeService for Master {
 		fn new() -> Result<Self> {
 			return Ok(Master {
 				local: format!(
 					"{}:{}",
-					IP.as_ref().unwrap(),
-					PORT.as_ref().unwrap()
+					IP.get().unwrap(),
+					PORT.get().unwrap()
 				)
 					.parse()?,
-				hdfs: PathBuf::from(HDFS.as_ref().unwrap()),
-				logs: PathBuf::from(LOGS.as_ref().unwrap()),
+				hdfs: PathBuf::from(HDFS.get().unwrap()),
+				logs: PathBuf::from(LOGS.get().unwrap()),
 			});
 		}
 		
@@ -142,6 +157,34 @@ pub mod master_node {
 			};
 		}
 	}
+	
+	#[async_trait]
+	impl RedisServer for Master {
+		async fn redis_set(_: HashMap<String, String>) -> Result<Option<Self::Data>> {
+			todo!()
+		}
+		async fn redis_get(_: HashSet<String>) -> Result<Option<Self::Data>> {
+			todo!()
+		}
+		async fn redis_remove(_: HashSet<String>) -> Result<()> {
+			todo!()
+		}
+	}
+	#[async_trait]
+	impl MysqlServer for Master {
+		async fn mysql_set(_: Vec<Self::Object>) -> Result<()> {
+			todo!()
+		}
+		async fn mysql_get_all() -> Result<Option<Self::Object>> {
+			todo!()
+		}
+		async fn mysql_update(_: Vec<(AeExam, String)>) -> Result<Option<AeExam>> {
+			todo!()
+		}
+		async fn mysql_remove(_: HashSet<String>) -> Result<()> {
+			todo!()
+		}
+	}
 }
 
 pub mod node_manager {
@@ -153,9 +196,9 @@ pub mod node_manager {
 	
 	impl Environment for Slave {}
 	
-	impl SlimeNode for Slave {
+	impl NodeService for Slave {
 		fn new() -> Result<Self> {
-			let x = block_on(FileAsynchronousOperation::Read([(PathBuf::from(NODE.as_ref().unwrap()), vec![])]).file_async())?;
+			let x = block_on(FileAsynchronousOperation::Read([(PathBuf::from(NODE.get().unwrap()), vec![])]).file_async())?;
 			let (_, y) = x.get(0).unwrap();
 			return Ok(serde_json::from_str(&*y.load().as_str())?);
 		}

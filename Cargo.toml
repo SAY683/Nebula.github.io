@@ -17,14 +17,14 @@ deluge = { version = "*", features = ["tokio"] }#:异步流>
 #async<+>async<+>async<+>async<+>async<+>async<+>async<+>async<+>async<+>
 
 #database<+>database<+>database<+>database<+>database<+>database<+>database<+>
-#chrono = "*"#:Mysql|时间>
-#rbatis = { version = "*" }#:ORM(A)Mysql>
-#rbdc = "*"#:ORM(B)Mysql>
-#rbdc-mysql = "*"#:ORM(C)Mysql>
-#rbs = "*"#ORM(D)Mysql>
+chrono = "*"#:Mysql|时间>
+rbatis = { version = "*" }#:ORM(A)Mysql>
+rbdc = "*"#:ORM(B)Mysql>
+rbdc-mysql = "*"#:ORM(C)Mysql>
+rbs = "*"#ORM(D)Mysql>
+mysql_async = "*"#:Mysql语句执行>
 #rayon = "*"#:微型本地数据库>
-#deadpool-redis = { version = "*", features = ["serde"] }#:Redis链接>
-#r2d2_redis = "*"#redis链接池池_兼容用>
+deadpool-redis = { version = "*", features = ["serde"] }#:Redis链接>
 #database<+>database<+>database<+>database<+>database<+>database<+>database<+>
 
 #serialization<+>serialization<+>serialization<+>serialization<+>serialization<+>
@@ -38,15 +38,16 @@ quick-xml = { version = "*", features = ["serde", "async-tokio", "serialize"] }#
 #serialization<+>serialization<+>serialization<+>serialization<+>serialization<+>
 
 #thread<+>thread<+>thread<+>thread<+>thread<+>thread<+>thread<+>thread<+>thread<+>
-#kanal = "0.1.0-pre1"#:线程通信Bata>
+#kanal = "0.1.0-pre4"#:线程通信Bata>
 #thread_local = "*"#:线程通信副本>
-#async-backtrace = "*"#:异步线程记录>
+async-backtrace = "*"#:异步线程记录>
 #thread<+>thread<+>thread<+>thread<+>thread<+>thread<+>thread<+>thread<+>thread<+>
 
 #dataInitial<+>dataInitial<+>dataInitial<+>dataInitial<+>dataInitial<+>dataInitial<+>
 lazy_static = "*"#:惰性初始>
 once_cell = "*"#:|Cell模式全局数据>
 stretto = { version = "*", features = ["full"] }#:缓存>
+arc-swap = "*"#:原子锁>
 #dataInitial<+>dataInitial<+>dataInitial<+>dataInitial<+>dataInitial<+>dataInitial<+>
 
 #dataOptimization<+>dataOptimization<+>dataOptimization<+>dataOptimization<+>dataOptimization<+>
@@ -55,7 +56,6 @@ hashbrown = "*"#:|哈希(性能)>
 #spin = "*"#:|自旋锁>
 parking_lot = { version = "*", feature = ["const_fair_mutex", "const_mutex", "const_reentrant_mutex", "const_rwlock"] }#:数据锁>
 compact_str = "*"#:String优化版>
-arc-swap = "*"#:原子锁>
 #dataOptimization<+>dataOptimization<+>dataOptimization<+>dataOptimization<+>dataOptimization<+>
 
 #eventHandling<+>eventHandling<+>eventHandling<+>eventHandling<+>eventHandling<+>eventHandling<+>
@@ -74,7 +74,7 @@ dotenv = "*"#:环境解析>
 
 #network<+>network<+>network<+>network<+>network<+>network<+>network<+>network<+>network<+>
 #s2n-quic = "*"#QUIC>
-#uuid = "*"#:ID
+uuid = "*"#:ID
 #http = "*"#:请求处理>
 #reqwest = { version = "*", features = ["json", "socks", "stream", "blocking"] }#:http处理[单线程阻塞]>
 #webpki-roots = "*"#:TLS证书>
