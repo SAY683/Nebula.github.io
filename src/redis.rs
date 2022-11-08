@@ -1,12 +1,12 @@
-use serde::{Serialize, Deserialize};
+use crate::node::NodeService;
+use crate::{REDIS};
+use anyhow::Result;
 use async_trait::async_trait;
 use deadpool_redis::redis::{Client, ConnectionLike};
 use deadpool_redis::{Connection, Pool};
-use anyhow::Result;
 use futures::executor::block_on;
-use hashbrown::{HashSet,HashMap};
-use crate::node::NodeService;
-use crate::REDIS;
+use hashbrown::{HashMap, HashSet};
+use serde::{Deserialize, Serialize};
 
 ///#Redis_Ulr
 #[derive(Debug, Serialize, Deserialize)]
@@ -27,7 +27,7 @@ impl NodeService for RedisUlr {
 	type Data = String;
 	///#产生
 	///#redis://[<username>][:<password>@]<hostname>[:port][/<db>]
-	fn handle(&self) -> anyhow::Result<Self::Data> {
+	fn handle(&self) -> Result<Self::Data> {
 		Ok(if self.name.is_some() || self.password.is_some() {
 			format!(
 				"redis://{}:{}@{}:{}/{}",
@@ -46,6 +46,7 @@ impl NodeService for RedisUlr {
 ///#redis服务
 #[async_trait]
 pub trait RedisServer<Gx = String> {
+	type GX=Gx;
 	///#redis(e: &str) -> Result<Client>
 	fn redis(e: &str) -> Result<Client> {
 		return Ok(Client::open(e)?);
@@ -60,8 +61,8 @@ pub trait RedisServer<Gx = String> {
 		return Ok(e.get().await?);
 	}
 	type Data = Vec<Gx>;
-	///#async fn redis_set(_: &Gx) -> Result<Self::Data>;
-	async fn redis_set(_: HashMap<Gx, Gx>) -> Result<Option<Self::Data>>;
+	///#async fn redis_set(_: &Gx) -> Result<()>;
+	async fn redis_set(_: HashMap<Gx, Gx>) -> Result<()>;
 	///#async fn get_redis_get(_: &Gx)->Result<Self::Data>;
 	async fn redis_get(_: HashSet<Gx>) -> Result<Option<Self::Data>>;
 	///#async fn get_redis_remove(_: &Gx) -> Result<()>;

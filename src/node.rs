@@ -42,7 +42,7 @@ pub struct Node {
 
 #[async_trait]
 pub trait NodeService: Sized {
-	async fn local_node()->Result<String>{
+	async fn local_node() -> Result<String> {
 		let x = UdpSocket::bind("0.0.0.0:0").await?;
 		x.connect("8.8.8.8:80").await?;
 		return Ok(x.local_addr()?.ip().to_string());
@@ -80,9 +80,10 @@ pub mod master_node {
 	use crate::node::Master;
 	use crate::view::GUI;
 	use std::ops::{Deref, DerefMut};
+	use deadpool_redis::redis::cmd;
 	use hashbrown::{HashMap, HashSet};
 	use crate::data_table::AeExam;
-	use crate::{HDFS, IP, LOGS, PORT};
+	use crate::{HDFS, IP, LOGS, MYSQL_DRIVE, PORT, REDIS_DRIVE};
 	use crate::mysql::MysqlServer;
 	use crate::redis::RedisServer;
 	
@@ -160,8 +161,12 @@ pub mod master_node {
 	
 	#[async_trait]
 	impl RedisServer for Master {
-		async fn redis_set(_: HashMap<String, String>) -> Result<Option<Self::Data>> {
-			todo!()
+		async fn redis_set(e: HashMap<String, String>) -> Result<()> {
+			let mut z = REDIS_DRIVE.as_ref().unwrap().get_tokio_connection().await?;
+			for (x, y) in e.into_iter() {
+				cmd("SET").arg(x).arg(y).query_async(&mut z).await?;
+			}
+			return Ok(());
 		}
 		async fn redis_get(_: HashSet<String>) -> Result<Option<Self::Data>> {
 			todo!()
@@ -170,13 +175,23 @@ pub mod master_node {
 			todo!()
 		}
 	}
+	
 	#[async_trait]
 	impl MysqlServer for Master {
-		async fn mysql_set(_: Vec<Self::Object>) -> Result<()> {
-			todo!()
+		async fn mysql_set(e: Self::Object) -> Result<HashMap<<Self as RedisServer>::GX, <Self as RedisServer>::GX>> {
+			let mut x = MYSQL_DRIVE.as_ref().unwrap();
+			let mut v: HashMap<String, String> = HashMap::new();
+			for i in e.into_iter() {
+				AeExam::insert(&mut x, &i).await?;
+				v.insert(i.name.to_string(), i.id.unwrap());
+			};
+			return Ok(v);
 		}
-		async fn mysql_get_all() -> Result<Option<Self::Object>> {
-			todo!()
+		
+		async fn mysql_get_all() -> Result<Self::Object> {
+			return Ok(AeExam::select_all(
+				&mut MYSQL_DRIVE.as_ref().unwrap()
+			).await?.into_iter().collect::<Vec<_>>());
 		}
 		async fn mysql_update(_: Vec<(AeExam, String)>) -> Result<Option<AeExam>> {
 			todo!()

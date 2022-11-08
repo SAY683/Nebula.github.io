@@ -1,15 +1,15 @@
-use futures::executor::block_on;
-use serde::{Serialize, Deserialize};
+use crate::data_table::AeExam;
 use crate::node::NodeService;
+use crate::{MYSQL, RedisServer};
 use anyhow::Result;
-use crate::MYSQL;
 use async_trait::async_trait;
-use hashbrown::HashSet;
+use futures::executor::block_on;
+use hashbrown::{HashMap, HashSet};
 use mysql_async::prelude::{Query, Queryable};
 use mysql_async::{Conn as AsyncConn, Pool as AsyncPool};
 use rbatis::Rbatis;
 use rbdc_mysql::driver::MysqlDriver;
-use crate::data_table::AeExam;
+use serde::{Deserialize, Serialize};
 
 ///#Mysql_Ulr
 #[derive(Debug, Serialize, Deserialize)]
@@ -39,7 +39,7 @@ impl NodeService for MysqlUlr {
 }
 
 #[async_trait]
-pub trait MysqlServer<Gx = AeExam> {
+pub trait MysqlServer<Gx = AeExam>: RedisServer {
 	///#async_mysql get fn get(e: &str) -> AsyncPool
 	fn get_pool(e: &str) -> AsyncPool {
 		return AsyncPool::new(e);
@@ -49,9 +49,10 @@ pub trait MysqlServer<Gx = AeExam> {
 		return Ok(e.get_conn().await?);
 	}
 	///#AsyncPool move AsyncPool to disconnect<断开>
-	///#async_mysql pool async fn async fn quote(e: &str, r: &AsyncPool) -> Result<()>
-	async fn quote(e: &str, r: AsyncPool) -> Result<()> {
-		e.ignore(&r).await?;
+	///#async_mysql pool async fn async fn quote(e: &str, r: ulr: &str) -> Result<()>
+	async fn quote(e: &str, ulr: &str) -> Result<()> {
+		let mut r = AsyncPool::new(ulr).get_conn().await?;
+		e.ignore(&mut r).await?;
 		r.disconnect().await?;
 		return Ok(());
 	}
@@ -68,9 +69,9 @@ pub trait MysqlServer<Gx = AeExam> {
 	}
 	type Object = Vec<Gx>;
 	///#async fn mysql_set(_: Self::Object) -> Result<()>;
-	async fn mysql_set(_: Vec<Self::Object>) -> Result<()>;
-	///#async fn mysql_get_all() -> Result<Option<Self::Object>>;
-	async fn mysql_get_all() -> Result<Option<Self::Object>>;
+	async fn mysql_set(_: Self::Object) -> Result<HashMap<<Self as RedisServer>::GX, <Self as RedisServer>::GX>>;
+	///#async fn mysql_get_all() -> Result<Self::Object>;
+	async fn mysql_get_all() -> Result<Self::Object>;
 	///#async fn mysql_update(_: HashSet<(Gx, String)>) -> Result<Option<Gx>>;
 	async fn mysql_update(_: Vec<(Gx, String)>) -> Result<Option<Gx>>;
 	///#async fn mysql_remove(_: HashSet<String>) -> Result<()>;

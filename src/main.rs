@@ -10,33 +10,35 @@ let_chains,
 unboxed_closures,
 async_closure,
 type_ascription,
-never_type
+never_type,
+impl_trait_in_fn_trait_return,
+const_try
 )]
 
 mod beginning;
 mod end;
 pub mod env;
 pub mod file;
+pub mod mysql;
 pub mod node;
+pub mod redis;
 mod run;
 pub mod view;
-pub mod mysql;
-pub mod redis;
 
 pub use crate::env::Setting;
+use crate::mysql::MysqlServer;
+pub use crate::node::Slave;
+use crate::redis::{RedisServer, RedisUlr};
 pub use crate::view::GUI;
+use crate::view::{Colour, Grade};
+use deadpool_redis::redis::Client;
 pub use env::Environment;
 use lazy_static::lazy_static;
 pub use node::Master;
-use once_cell::sync::{OnceCell};
-use tokio::main;
-pub use crate::node::Slave;
-use crate::view::{Colour, Grade};
-use deadpool_redis::redis::{Client};
-use crate::redis::{RedisServer, RedisUlr};
-use std::net::UdpSocket;
-use crate::mysql::MysqlServer;
+use once_cell::sync::OnceCell;
 use rbatis::Rbatis;
+use std::net::UdpSocket;
+use tokio::main;
 
 #[main]
 pub async fn main() -> anyhow::Result<()> {
@@ -49,11 +51,11 @@ pub async fn main() -> anyhow::Result<()> {
 运行时调用
  */
 lazy_static! {
-	//Redis驱动
-	pub static ref REDIS_DRIVE:anyhow::Result<Client>=Ok(Master::redis(REDIS_ULR.get().unwrap())?);
-	//Mysql驱动
-	pub static ref MYSQL_DRIVE:anyhow::Result<Rbatis>=Ok(Master::orm(MYSQL_ULR.get().unwrap())?);
-	//#本机ip
+    //Redis驱动
+    pub static ref REDIS_DRIVE:anyhow::Result<Client>=Ok(Master::redis(REDIS_ULR.get().unwrap())?);
+    //Mysql驱动
+    pub static ref MYSQL_DRIVE:anyhow::Result<Rbatis>=Ok(Master::orm(MYSQL_ULR.get().unwrap())?);
+    //#本机ip
     pub static ref LOCAL_IP: anyhow::Result<String>={
         let x = UdpSocket::bind("0.0.0.0:0")?;
         x.connect("8.8.8.8:80")?;
@@ -86,7 +88,7 @@ pub mod special_type {
 	use serde::{Deserialize, Serialize};
 	use std::future::Future;
 	use std::pin::Pin;
-	use thiserror::{Error};
+	use thiserror::Error;
 	
 	///#异步闭包[Future]
 	///#pub struct AsyncDriver<'life, Rx: Sized>(
@@ -122,7 +124,6 @@ pub mod special_type {
 pub mod data_table {
 	use rbatis::{crud, impl_select};
 	use rbdc::datetime::FastDateTime;
-	use serde::{Serialize, Deserialize};
 	
 	///#默认数据表
 	#[derive(Hash, Clone, Debug, Serialize, Deserialize)]
@@ -154,12 +155,16 @@ create table if not exists ae_exam
 	location longtext null,
 	time datetime null
 )engine=InnoDB,charset=utf8mb4;
-create index ae_exam_id_index
-	on exam (id);
-create unique index ae_exam_name_uindex
-	on exam (name);
-alter table ae_exam
-	add constraint ae_exam_pk
-		primary key (name);
 ";
+	
+	///#数据库
+	#[macro_use]
+	pub mod database_strap;
+	//#索引数据
+	database_src! {
+		indexes,
+		id,i64,
+		name,String
+	}
+	crud!(indexes{});
 }

@@ -1,10 +1,15 @@
 use crate::env::Environment;
-use crate::node::{Master, NodeService, Slave};
-use crate::{CERT, Colour, Grade, HDFS, HTTP_HOME, IP, KEY, LOGS, MASTER, MYSQL, MYSQL_ULR, MysqlServer, NODE, PORT, REDIS, REDIS_DRIVE, REDIS_ULR, RedisServer, RedisUlr, SETTING, SETTING_UP, SLAVE, TRANSCRIPT};
-use anyhow::Result;
 use crate::mysql::MysqlUlr;
-use async_backtrace::framed;
+use crate::node::{Master, NodeService, Slave};
 use crate::view::GUI;
+use crate::{
+	Colour, Grade, MysqlServer, RedisServer, RedisUlr, CERT, HDFS, HTTP_HOME, IP, KEY, LOGS,
+	MASTER, MYSQL, MYSQL_ULR, NODE, PORT, REDIS, REDIS_DRIVE, REDIS_ULR, SETTING, SETTING_UP,
+	SLAVE, TRANSCRIPT,
+};
+use anyhow::Result;
+use async_backtrace::framed;
+use crate::data_table::AE_EXAM;
 
 ///#初始化
 #[framed]
@@ -12,22 +17,36 @@ pub async fn init() -> Result<()> {
 	the_initial_data().await?;
 	if SETTING.get().unwrap().heat_enabled {
 		check().await?;
-	} else {}
+		data_establish(AE_EXAM).await.unwrap();
+	}
 	return Ok(());
 }
 
 ///#全面检查
 pub async fn check() -> Result<()> {
 	let mut x = Master::conn(&Master::get_pool(MYSQL_ULR.get().unwrap())).await?;
-	let r = Master::ping(&mut x).await?;
+	let (r1, r2, r3) = Master::ping(&mut x).await?;
 	x.disconnect().await?;
-	println!("{}", *GUI::from((Colour::Output, Grade {
-		explain: vec!["REDIS", "MYSQL"],
-		output: vec![
-			vec![format!("REDIS VERSION[{}]", Master::ping_lot(REDIS_DRIVE.as_ref().unwrap())?).as_str(),
-			     format!("MYSQL VERSION[{}.{}{}]", r.0, r.1, r.2).as_str()]
-		],
-	})));
+	Master::ping_lot(REDIS_DRIVE.as_ref().unwrap())?;
+	println!(
+		"{}",
+		*GUI::from((
+			Colour::Output,
+			Grade {
+				explain: vec!["REDIS", "MYSQL"],
+				output: vec![vec![
+					format!("REDIS VERSION[OK]").as_str(),
+					format!("MYSQL VERSION[{r1}.{r2}{r3}]").as_str(),
+				]],
+			}
+		))
+	);
+	return Ok(());
+}
+
+///#数据建立
+pub async fn data_establish(e: &str) -> Result<()> {
+	Master::quote(e, MYSQL_ULR.get().unwrap()).await?;
 	return Ok(());
 }
 
