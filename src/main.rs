@@ -122,7 +122,7 @@ pub mod special_type {
 
 ///#数据表
 pub mod data_table {
-	use rbatis::{crud, impl_select};
+	use rbatis::{crud, impl_select, impl_update};
 	use rbdc::datetime::FastDateTime;
 	
 	///#默认数据表
@@ -142,10 +142,12 @@ pub mod data_table {
 	//依据实现
 	crud!(AeExam {});
 	//查询id
-	impl_select!(AeExam {select_id(id:&str)=>"where id = #{name}"});
+	impl_select!(AeExam {select_id(id:&str)=>"`where id = #{name}`"});
 	//查询名称
-	impl_select!(AeExam{select_name(name:&str)=>"where name = #{name}"});
-	///默认数据表格
+	impl_select!(AeExam{select_name(name:&str)=>"`where name = #{name}`"});
+	//基于id更新
+	impl_update!(AeExam{update_id(id:&str)=>"`where id = #{id}`"});
+	///#默认数据表格
 	pub const AE_EXAM: &str = r"
 create table if not exists ae_exam
 (

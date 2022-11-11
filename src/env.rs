@@ -59,6 +59,8 @@ pub struct Setting {
     pub backups: i64,
     //热启动
     pub heat_enabled: bool,
+	//web自驱动
+	pub web_enabled:bool
 }
 ///#系统数据
 pub struct SystemData {

@@ -15,9 +15,12 @@ use crate::data_table::AE_EXAM;
 #[framed]
 pub async fn init() -> Result<()> {
 	the_initial_data().await?;
-	if SETTING.get().unwrap().heat_enabled {
-		check().await?;
-		data_establish(AE_EXAM).await.unwrap();
+	match SETTING.get().unwrap().heat_enabled {
+		true => {
+			check().await?;
+			data_establish(AE_EXAM).await?;
+		}
+		false => {}
 	}
 	return Ok(());
 }

@@ -8,4 +8,6 @@
     <backups>1</backups>
     <!--热启用-->
     <heat_enabled>true</heat_enabled>
+    <!--web自驱动(不稳定)-->
+    <web_enabled>false</web_enabled>
 </NEBULA>

@@ -161,6 +161,7 @@ pub mod master_node {
 	
 	#[async_trait]
 	impl RedisServer for Master {
+		type Data = HashMap<String, Option<String>>;
 		async fn redis_set(e: HashMap<String, String>) -> Result<()> {
 			let mut z = REDIS_DRIVE.as_ref().unwrap().get_tokio_connection().await?;
 			for (x, y) in e.into_iter() {
@@ -168,24 +169,34 @@ pub mod master_node {
 			}
 			return Ok(());
 		}
-		async fn redis_get(_: HashSet<String>) -> Result<Option<Self::Data>> {
-			todo!()
+		async fn redis_get(e: HashSet<String>) -> Result<Self::Data> {
+			let mut z = REDIS_DRIVE.as_ref().unwrap().get_connection()?;
+			let mut x = HashMap::new();
+			for i in e.into_iter() {
+				x.insert(i.as_str().to_string(), cmd("GET").arg(i).query::<Option<String>>(&mut z)?);
+			}
+			return Ok(x);
 		}
-		async fn redis_remove(_: HashSet<String>) -> Result<()> {
-			todo!()
+		async fn redis_remove(e: HashSet<String>) -> Result<()> {
+			let mut z = REDIS_DRIVE.as_ref().unwrap().get_tokio_connection().await?;
+			for i in e.into_iter() {
+				cmd("DEL").arg(i).query_async(&mut z).await?;
+			}
+			return Ok(());
 		}
 	}
 	
 	#[async_trait]
 	impl MysqlServer for Master {
-		async fn mysql_set(e: Self::Object) -> Result<HashMap<<Self as RedisServer>::GX, <Self as RedisServer>::GX>> {
+		async fn mysql_set(e: Self::Object) -> Result<()> {
 			let mut x = MYSQL_DRIVE.as_ref().unwrap();
 			let mut v: HashMap<String, String> = HashMap::new();
 			for i in e.into_iter() {
 				AeExam::insert(&mut x, &i).await?;
-				v.insert(i.name.to_string(), i.id.unwrap());
+				v.insert(String::from(i.name), String::from(i.id.unwrap()));
 			};
-			return Ok(v);
+			Master::redis_set(v).await?;
+			return Ok(());
 		}
 		
 		async fn mysql_get_all() -> Result<Self::Object> {
@@ -193,11 +204,29 @@ pub mod master_node {
 				&mut MYSQL_DRIVE.as_ref().unwrap()
 			).await?.into_iter().collect::<Vec<_>>());
 		}
-		async fn mysql_update(_: Vec<(AeExam, String)>) -> Result<Option<AeExam>> {
-			todo!()
+		async fn mysql_update(e: Vec<(AeExam, String)>) -> Result<()> {
+			let mut i = MYSQL_DRIVE.as_ref().unwrap();
+			//y=name
+			for (x, y) in e.into_iter() {
+				let r = Master::redis_get(HashSet::from([y.to_string()])).await?;
+				let r = r.get(&y).unwrap().as_ref().unwrap();
+				if x.name != r.as_str() {
+					AeExam::update_id(&mut i, &x, r).await?;
+					let _ = Master::redis_cmd::<String>("rename", HashSet::from([y, x.name]))?;
+				} else {
+					AeExam::update_id(&mut i, &x, r).await?;
+				}
+			}
+			return Ok(());
 		}
-		async fn mysql_remove(_: HashSet<String>) -> Result<()> {
-			todo!()
+		async fn mysql_remove(e: HashSet<String>) -> Result<()> {
+			let mut x = MYSQL_DRIVE.as_ref().unwrap();
+			for i in e.into_iter() {
+				let u = Master::redis_get(HashSet::from([i.to_string()])).await?;
+				AeExam::delete_by_column(&mut x, "id", u.get(i.as_str()).unwrap().as_ref().unwrap()).await?;
+				Master::redis_remove(HashSet::from([i.to_string()])).await?;
+			}
+			return Ok(());
 		}
 	}
 }

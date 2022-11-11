@@ -30,10 +30,9 @@ deadpool-redis = { version = "*", features = ["serde"] }#:Redis链接>
 #serialization<+>serialization<+>serialization<+>serialization<+>serialization<+>
 serde = { version = "*", features = ["derive"] }#:数据序列>
 serde_json = "*"#:json序列>
-data-encoding = "*"#:数据编码>
-combine = "*"#:数据解析>
-bytes = { version = "*", features = ["serde"] }#:|字节处理>
-datafusion = "*"#:CSV数据查询>
+#data-encoding = "*"#:数据编码>
+#combine = "*"#:数据解析>
+#bytes = { version = "*", features = ["serde"] }#:|字节处理>
 quick-xml = { version = "*", features = ["serde", "async-tokio", "serialize"] }#:配置文件>
 #serialization<+>serialization<+>serialization<+>serialization<+>serialization<+>
 
@@ -51,7 +50,7 @@ arc-swap = "*"#:原子锁>
 #dataInitial<+>dataInitial<+>dataInitial<+>dataInitial<+>dataInitial<+>dataInitial<+>
 
 #dataOptimization<+>dataOptimization<+>dataOptimization<+>dataOptimization<+>dataOptimization<+>
-ahash = "*"#:|哈希(安全)>
+#ahash = "*"#:|哈希(安全)>
 hashbrown = "*"#:|哈希(性能)>
 #spin = "*"#:|自旋锁>
 parking_lot = { version = "*", feature = ["const_fair_mutex", "const_mutex", "const_reentrant_mutex", "const_rwlock"] }#:数据锁>
@@ -73,13 +72,14 @@ dotenv = "*"#:环境解析>
 #eventHandling<+>eventHandling<+>eventHandling<+>eventHandling<+>eventHandling<+>eventHandling<+>
 
 #network<+>network<+>network<+>network<+>network<+>network<+>network<+>network<+>network<+>
-#s2n-quic = "*"#QUIC>
 uuid = "*"#:ID
 #http = "*"#:请求处理>
 #reqwest = { version = "*", features = ["json", "socks", "stream", "blocking"] }#:http处理[单线程阻塞]>
 #webpki-roots = "*"#:TLS证书>
 #tokio-rustls = "*"#:AsyncTLS>
 #tonic = { version = "*", features = ["async-trait", "tokio-rustls", "channel", "prost-derive", "prost", "gzip"] }#:gRPC>
+#s2n-quic = "*"#QUIC>
+#rsa = { version = "*", features = ["pkcs5", "pem", "serde", "serde_crate"] }#:rsa库>
 #network<+>network<+>network<+>network<+>network<+>network<+>network<+>network<+>network<+>
 
 #gui<+>gui<+>gui<+>gui<+>gui<+>gui<+>gui<+>gui<+>gui<+>gui<+>gui<+>gui<+>gui<+>gui<+>gui<+>

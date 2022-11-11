@@ -1,8 +1,8 @@
 use crate::node::NodeService;
-use crate::{REDIS};
+use crate::{REDIS, REDIS_DRIVE};
 use anyhow::Result;
 use async_trait::async_trait;
-use deadpool_redis::redis::{Client, ConnectionLike};
+use deadpool_redis::redis::{Client, cmd, ConnectionLike, FromRedisValue};
 use deadpool_redis::{Connection, Pool};
 use futures::executor::block_on;
 use hashbrown::{HashMap, HashSet};
@@ -46,7 +46,7 @@ impl NodeService for RedisUlr {
 ///#redis服务
 #[async_trait]
 pub trait RedisServer<Gx = String> {
-	type GX=Gx;
+	type GX = Gx;
 	///#redis(e: &str) -> Result<Client>
 	fn redis(e: &str) -> Result<Client> {
 		return Ok(Client::open(e)?);
@@ -60,11 +60,20 @@ pub trait RedisServer<Gx = String> {
 	async fn redis_connection_async(e: Pool) -> Result<Connection> {
 		return Ok(e.get().await?);
 	}
-	type Data = Vec<Gx>;
+	type Data;
 	///#async fn redis_set(_: &Gx) -> Result<()>;
 	async fn redis_set(_: HashMap<Gx, Gx>) -> Result<()>;
 	///#async fn get_redis_get(_: &Gx)->Result<Self::Data>;
-	async fn redis_get(_: HashSet<Gx>) -> Result<Option<Self::Data>>;
+	async fn redis_get(_: HashSet<Gx>) -> Result<Self::Data>;
 	///#async fn get_redis_remove(_: &Gx) -> Result<()>;
 	async fn redis_remove(_: HashSet<Gx>) -> Result<()>;
+	///#fn redis_cmd<TS: FromRedisValue>(e: &str, r: HashSet<String>) -> Result<TS> ;
+	fn redis_cmd<TS: FromRedisValue>(e: &str, r: HashSet<String>) -> Result<TS> {
+		let mut z = REDIS_DRIVE.as_ref().unwrap().get_connection()?;
+		let mut i = cmd(e);
+		r.into_iter().for_each(|x| {
+			i.arg(x);
+		});
+		return Ok(i.query::<TS>(&mut z)?);
+	}
 }

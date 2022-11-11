@@ -69,11 +69,11 @@ pub trait MysqlServer<Gx = AeExam>: RedisServer {
 	}
 	type Object = Vec<Gx>;
 	///#async fn mysql_set(_: Self::Object) -> Result<()>;
-	async fn mysql_set(_: Self::Object) -> Result<HashMap<<Self as RedisServer>::GX, <Self as RedisServer>::GX>>;
+	async fn mysql_set(_: Self::Object) -> Result<()>;
 	///#async fn mysql_get_all() -> Result<Self::Object>;
 	async fn mysql_get_all() -> Result<Self::Object>;
-	///#async fn mysql_update(_: HashSet<(Gx, String)>) -> Result<Option<Gx>>;
-	async fn mysql_update(_: Vec<(Gx, String)>) -> Result<Option<Gx>>;
+	///#async fn mysql_update(_: HashSet<(Gx, String)>) -> Result<()>;
+	async fn mysql_update(_: Vec<(Gx, String)>) -> Result<()>;
 	///#async fn mysql_remove(_: HashSet<String>) -> Result<()>;
 	async fn mysql_remove(_: HashSet<String>) -> Result<()>;
 }
