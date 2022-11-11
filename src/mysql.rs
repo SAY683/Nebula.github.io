@@ -4,7 +4,7 @@ use crate::{MYSQL, RedisServer};
 use anyhow::Result;
 use async_trait::async_trait;
 use futures::executor::block_on;
-use hashbrown::{HashMap, HashSet};
+use hashbrown::{HashSet};
 use mysql_async::prelude::{Query, Queryable};
 use mysql_async::{Conn as AsyncConn, Pool as AsyncPool};
 use rbatis::Rbatis;
