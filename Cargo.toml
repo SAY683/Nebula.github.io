@@ -2,6 +2,14 @@
 name = "Nebula"
 version = "0.1.0"
 edition = "2021"
+authors = ["SAY683@protonmail.com", "3347212843@qq.com"]
+license = "MIT OR Apache-2.0"
+description = "Distributed storage database"
+keywords = ["mysql", "redis", "database"]
+categories = ["command-line-utilities"]
+readme = "README.md"
+homepage = "https://github.com/SAY683/Nebula.github.io.git"
+repository = "https://github.com/SAY683/Nebula.github.io.git"
 [badges]
 maintenance = { status = "InTheOptimization" }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
